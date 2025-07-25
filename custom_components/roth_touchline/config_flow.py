@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_PORT, DEFAULT_MAX_ZONES, DOMAIN, CONF_MAX_ZONES
+from .const import DEFAULT_PORT, DEFAULT_MAX_ZONES, DEFAULT_UPDATE_INTERVAL, DOMAIN, CONF_MAX_ZONES, CONF_UPDATE_INTERVAL
 from .hub import RothTouchlineHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_MAX_ZONES, default=DEFAULT_MAX_ZONES): vol.All(int, vol.Range(min=1, max=20)),
+        vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): vol.All(int, vol.Range(min=30, max=3600)),
     }
 )
 

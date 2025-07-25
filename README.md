@@ -43,10 +43,18 @@ This integration supports the classic Roth Touchline series thermostats and heat
 4. Enter your configuration:
    - **Host/IP Address**: Your Roth Touchline system's IP address
    - **Port**: Connection port (default: 80)
-   - **Maximum number of zones**: Number of zones to monitor (default: 7, range: 1-20)
+   - **Maximum number of zones**: Number of zones to monitor (default: 10, range: 1-20)
+   - **Update interval**: How often to fetch temperature data in seconds (default: 300 = 5 minutes, range: 30-3600)
 5. Click "Submit"
 
 The integration will automatically detect which zones are available on your system.
+
+### Recommended Update Intervals
+
+- **30-60 seconds**: For active monitoring and quick response to temperature changes
+- **300 seconds (5 minutes)**: Default - good balance between responsiveness and system load
+- **600-1800 seconds (10-30 minutes)**: For basic temperature logging with minimal network traffic
+- **3600 seconds (1 hour)**: For long-term temperature monitoring only
 
 ## Entities
 

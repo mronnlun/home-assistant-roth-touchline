@@ -3,11 +3,12 @@
     "step": {
       "user": {
         "title": "Roth Touchline Temperature Logger Setup",
-        "description": "Configure your Roth Touchline system for temperature logging",
+        "description": "Configure your Roth Touchline system for temperature logging. Default update interval is 5 minutes (300 seconds).",
         "data": {
           "host": "Host/IP Address",
           "port": "Port",
-          "max_zones": "Maximum number of zones (1-20)"
+          "max_zones": "Maximum number of zones (1-20)",
+          "update_interval": "Update interval in seconds (30-3600, default: 300)"
         }
       }
     },

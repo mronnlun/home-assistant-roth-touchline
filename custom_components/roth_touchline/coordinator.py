@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN
 from .hub import RothTouchlineHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,14 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 class RothTouchlineDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Roth Touchline system."""
 
-    def __init__(self, hass: HomeAssistant, hub: RothTouchlineHub) -> None:
+    def __init__(self, hass: HomeAssistant, hub: RothTouchlineHub, update_interval_seconds: int = 300) -> None:
         """Initialize."""
         self.hub = hub
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=UPDATE_INTERVAL,
+            update_interval=timedelta(seconds=update_interval_seconds),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:

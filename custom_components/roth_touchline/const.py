@@ -6,16 +6,15 @@ DOMAIN = "roth_touchline"
 # Configuration
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_MAX_ZONES = "max_zones"
-DEFAULT_UPDATE_INTERVAL = 30
+DEFAULT_UPDATE_INTERVAL = 300  # 5 minutes
 DEFAULT_MAX_ZONES = 10
 
 # Default values
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 10
-DEFAULT_MAX_ZONES = 10
 
-# Update interval
-UPDATE_INTERVAL = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
+# Note: UPDATE_INTERVAL is now dynamically set based on configuration
+# UPDATE_INTERVAL = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
 
 # Temperature logging settings
 TEMP_LOG_RETENTION_DAYS = 30

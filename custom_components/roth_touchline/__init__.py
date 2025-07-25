@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, CONF_MAX_ZONES, DEFAULT_MAX_ZONES
+from .const import DOMAIN, CONF_MAX_ZONES, CONF_UPDATE_INTERVAL, DEFAULT_MAX_ZONES, DEFAULT_UPDATE_INTERVAL
 from .coordinator import RothTouchlineDataUpdateCoordinator
 from .hub import RothTouchlineHub
 from .services import async_setup_services, async_unload_services
@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data.get(CONF_PORT, 80)
     max_zones = entry.data.get(CONF_MAX_ZONES, DEFAULT_MAX_ZONES)
+    update_interval = entry.data.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
 
     hub = RothTouchlineHub(hass, host, port, max_zones)
     
@@ -38,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Unable to connect to Roth Touchline at %s:%s: %s", host, port, err)
         raise ConfigEntryNotReady from err
 
-    coordinator = RothTouchlineDataUpdateCoordinator(hass, hub)
+    coordinator = RothTouchlineDataUpdateCoordinator(hass, hub, update_interval)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
