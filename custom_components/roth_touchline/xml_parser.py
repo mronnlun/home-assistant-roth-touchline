@@ -87,12 +87,13 @@ class RothTouchlineXMLParser:
             if name_key in values and values[name_key]:
                 zone_data["name"] = values[name_key]
             
-            # Add timestamp
-            from datetime import datetime
-            zone_data["timestamp"] = datetime.now()
+            # Add timestamp with timezone information
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            zone_data["timestamp"] = now
             
             # Also add last_seen timestamp for sensor
-            zone_data["last_seen"] = datetime.now()
+            zone_data["last_seen"] = now
             
         except Exception as err:
             _LOGGER.error("Error extracting zone data for %s: %s", zone_id, err)

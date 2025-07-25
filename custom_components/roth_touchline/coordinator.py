@@ -48,8 +48,9 @@ class RothTouchlineDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         #         "daily_max_temperature": daily_stats.get("max_temperature"),
                         #     })
                         
-                        # Add last seen timestamp
-                        zone_data["last_seen"] = zone_data.get("timestamp") or "Unknown"
+                        # Add last seen timestamp - use the existing timestamp from zone_data
+                        # which should already be a timezone-aware datetime object
+                        zone_data["last_seen"] = zone_data.get("timestamp")
                         
                         data[zone_id] = zone_data
 

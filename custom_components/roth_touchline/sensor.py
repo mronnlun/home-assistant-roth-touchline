@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -18,6 +18,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL, SENSOR_TYPES
 from .coordinator import RothTouchlineDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,14 +100,33 @@ class RothTouchlineSensor(CoordinatorEntity[RothTouchlineDataUpdateCoordinator],
         zone_data = self.coordinator.data.get(self._zone_id, {})
         value = zone_data.get(self._sensor_type)
         
-        # For timestamp sensors, ensure we return a datetime object
+        # For timestamp sensors, ensure we return a timezone-aware datetime object
         if self._sensor_type == "last_seen":
             if isinstance(value, datetime):
+                # If datetime is naive, assume it's UTC
+                if value.tzinfo is None:
+                    return value.replace(tzinfo=timezone.utc)
                 return value
             elif isinstance(value, str):
                 try:
-                    return datetime.fromisoformat(value.replace("Z", "+00:00"))
-                except (ValueError, AttributeError):
+                    # Handle different string formats
+                    if value.endswith('Z'):
+                        # ISO format with Z suffix
+                        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                    elif '+' in value or value.endswith('+00:00'):
+                        # ISO format with timezone offset
+                        dt = datetime.fromisoformat(value)
+                    else:
+                        # Naive datetime string - assume UTC
+                        dt = datetime.fromisoformat(value)
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    
+                    # Ensure result has timezone info
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    return dt
+                except (ValueError, AttributeError) as e:
+                    _LOGGER.warning("Failed to parse timestamp '%s': %s", value, e)
                     return None
             else:
                 return None
