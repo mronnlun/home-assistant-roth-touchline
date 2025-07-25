@@ -8,7 +8,7 @@ A custom integration for Home Assistant to monitor and log room temperatures fro
 - **Climate Control**: Full thermostat functionality with temperature setting and HVAC mode control
 - **Historical Data**: Access temperature history and daily statistics
 - **Data Export**: Export temperature data to CSV files for analysis
-- **Additional Sensors**: Humidity monitoring, battery levels, and connectivity status
+- **Additional Sensors**: Connectivity status and system monitoring
 - **Real-time Updates**: Automatic polling and logging of temperature data
 - **Easy Configuration**: Simple setup through Home Assistant's UI
 
@@ -58,7 +58,7 @@ The integration will automatically detect which zones are available on your syst
 - `sensor.roth_touchline_[zone_name]_target_temperature` - Target temperature setting (from SollTemp)
 - `sensor.roth_touchline_[zone_name]_last_seen` - Last communication timestamp
 
-**Note**: Additional sensors like daily statistics, humidity, and battery level may not be available via the XML API and depend on your specific Roth Touchline model and firmware.
+**Note**: Additional sensors like daily statistics may not be available via the XML API and depend on your specific Roth Touchline model and firmware.
 
 ### Climate Entities
 - `climate.roth_touchline_[zone_name]` - Climate control (primarily read-only monitoring)
@@ -69,7 +69,6 @@ The integration will automatically detect which zones are available on your syst
 - `binary_sensor.roth_touchline_[zone_name]_heating` - Heating status
 - `binary_sensor.roth_touchline_[zone_name]_cooling` - Cooling status
 - `binary_sensor.roth_touchline_[zone_name]_online` - Connectivity status
-- `binary_sensor.roth_touchline_[zone_name]_battery_low` - Low battery alert
 
 ## Services
 

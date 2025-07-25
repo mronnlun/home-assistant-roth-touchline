@@ -7,12 +7,12 @@ DOMAIN = "roth_touchline"
 CONF_UPDATE_INTERVAL = "update_interval"
 CONF_MAX_ZONES = "max_zones"
 DEFAULT_UPDATE_INTERVAL = 30
-DEFAULT_MAX_ZONES = 7
+DEFAULT_MAX_ZONES = 10
 
 # Default values
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 10
-DEFAULT_MAX_ZONES = 7
+DEFAULT_MAX_ZONES = 10
 
 # Update interval
 UPDATE_INTERVAL = timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
@@ -83,20 +83,6 @@ SENSOR_TYPES = {
         "device_class": "temperature",
         "state_class": "measurement",
         "icon": "mdi:thermometer-plus",
-    },
-    "humidity": {
-        "name": "Humidity",
-        "unit": "%",
-        "device_class": "humidity",
-        "state_class": "measurement",
-        "icon": "mdi:water-percent",
-    },
-    "battery_level": {
-        "name": "Battery Level",
-        "unit": "%",
-        "device_class": "battery",
-        "state_class": "measurement",
-        "icon": "mdi:battery",
     },
     "last_seen": {
         "name": "Last Seen",

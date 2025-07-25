@@ -31,10 +31,6 @@ BINARY_SENSOR_TYPES = {
         "name": "Online",
         "device_class": BinarySensorDeviceClass.CONNECTIVITY,
     },
-    "battery_low": {
-        "name": "Battery Low",
-        "device_class": BinarySensorDeviceClass.BATTERY,
-    },
 }
 
 

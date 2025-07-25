@@ -72,10 +72,6 @@ class RothTouchlineSensor(CoordinatorEntity[RothTouchlineDataUpdateCoordinator],
         device_class = sensor_config.get("device_class")
         if device_class == "temperature":
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        elif device_class == "humidity":
-            self._attr_device_class = SensorDeviceClass.HUMIDITY
-        elif device_class == "battery":
-            self._attr_device_class = SensorDeviceClass.BATTERY
         elif device_class == "timestamp":
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
             
