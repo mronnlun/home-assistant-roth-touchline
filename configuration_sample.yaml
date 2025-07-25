@@ -1,0 +1,149 @@
+# Sample configuration for Roth Touchline Temperature Logger
+# Place this in your Home Assistant configuration.yaml file
+
+# Logger configuration for temperature logging
+logger:
+  default: info
+  logs:
+    custom_components.roth_touchline: debug
+
+# Recorder configuration to store temperature history
+recorder:
+  purge_keep_days: 90  # Keep 90 days of temperature history
+  include:
+    domains:
+      - sensor
+    entity_globs:
+      - sensor.roth_touchline_*_temperature
+      - sensor.roth_touchline_*_humidity
+      - sensor.roth_touchline_*_battery_level
+
+# History configuration for temperature tracking
+history:
+  include:
+    entity_globs:
+      - sensor.roth_touchline_*_temperature
+      - sensor.roth_touchline_*_humidity
+      - climate.roth_touchline_*
+
+# Template sensors for additional calculations
+template:
+  - sensor:
+      # Calculate house average temperature
+      - name: "House Average Temperature"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {% set temps = states.sensor 
+            | selectattr('entity_id', 'match', 'sensor.roth_touchline_.*_current_temperature')
+            | selectattr('state', 'is_number')
+            | map(attribute='state') | map('float') | list %}
+          {% if temps | length > 0 %}
+            {{ (temps | sum / temps | length) | round(1) }}
+          {% else %}
+            unavailable
+          {% endif %}
+
+      # Temperature range (difference between min and max)
+      - name: "House Temperature Range"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state: >
+          {% set temps = states.sensor 
+            | selectattr('entity_id', 'match', 'sensor.roth_touchline_.*_current_temperature')
+            | selectattr('state', 'is_number')
+            | map(attribute='state') | map('float') | list %}
+          {% if temps | length > 1 %}
+            {{ (temps | max - temps | min) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+# Sample automation for temperature monitoring
+automation:
+  # Export temperature data weekly
+  - alias: "Weekly Temperature Data Export"
+    trigger:
+      platform: time
+      at: "02:00:00"
+    condition:
+      condition: time
+      weekday:
+        - mon
+    action:
+      - service: roth_touchline.export_temperature_data
+        data:
+          days: 7
+          
+  # Alert for temperature extremes
+  - alias: "Temperature Extreme Alert"
+    trigger:
+      - platform: numeric_state
+        entity_id: 
+          - sensor.roth_touchline_living_room_current_temperature
+          - sensor.roth_touchline_bedroom_current_temperature
+          - sensor.roth_touchline_kitchen_current_temperature
+        below: 16
+        for:
+          minutes: 30
+      - platform: numeric_state
+        entity_id:
+          - sensor.roth_touchline_living_room_current_temperature
+          - sensor.roth_touchline_bedroom_current_temperature
+          - sensor.roth_touchline_kitchen_current_temperature
+        above: 26
+        for:
+          minutes: 30
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "Temperature Alert"
+          message: >
+            Room {{ trigger.to_state.name }} temperature is 
+            {{ trigger.to_state.state }}°C at {{ now().strftime('%H:%M') }}
+
+# Sample dashboard card configuration
+# Add this to your dashboard YAML or use the UI editor
+lovelace:
+  resources:
+    - url: /local/mini-graph-card-bundle.js
+      type: module
+  dashboards:
+    temperature-logger:
+      mode: yaml
+      title: "Temperature Logger"
+      cards:
+        - type: entities
+          title: "Current Temperatures"
+          entities:
+            - sensor.roth_touchline_living_room_current_temperature
+            - sensor.roth_touchline_bedroom_current_temperature
+            - sensor.roth_touchline_kitchen_current_temperature
+            - sensor.house_average_temperature
+            - sensor.house_temperature_range
+
+        - type: custom:mini-graph-card
+          name: "Temperature History"
+          height: 150
+          hours_to_show: 24
+          entities:
+            - sensor.roth_touchline_living_room_current_temperature
+            - sensor.roth_touchline_bedroom_current_temperature
+            - sensor.roth_touchline_kitchen_current_temperature
+          show:
+            labels: true
+            points: false
+            legend: true
+
+        - type: statistics-graph
+          title: "Daily Temperature Statistics"
+          days_to_show: 7
+          entities:
+            - sensor.roth_touchline_living_room_daily_avg_temperature
+            - sensor.roth_touchline_bedroom_daily_avg_temperature
+            - sensor.roth_touchline_kitchen_daily_avg_temperature
+          stat_types:
+            - mean
+            - min
+            - max

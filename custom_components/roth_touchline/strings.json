@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Roth Touchline Temperature Logger Setup",
+        "description": "Configure your Roth Touchline system for temperature logging",
+        "data": {
+          "host": "Host/IP Address",
+          "port": "Port",
+          "max_zones": "Maximum number of zones (1-20)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Roth Touchline system",
+      "invalid_auth": "Invalid authentication credentials",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This Roth Touchline system is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Roth Touchline Temperature Logger Options",
+        "description": "Configure temperature logging options",
+        "data": {
+          "update_interval": "Update interval (seconds)",
+          "log_interval": "Temperature logging interval (minutes)",
+          "retention_days": "Data retention period (days)",
+          "max_zones": "Maximum number of zones (1-20)"
+        }
+      }
+    }
+  },
+  "services": {
+    "get_temperature_history": {
+      "name": "Get Temperature History",
+      "description": "Retrieve temperature history for a specific zone"
+    },
+    "export_temperature_data": {
+      "name": "Export Temperature Data", 
+      "description": "Export temperature data to CSV file"
+    }
+  }
+}

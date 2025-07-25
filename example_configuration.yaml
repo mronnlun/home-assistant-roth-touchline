@@ -1,0 +1,179 @@
+# Example Home Assistant Configuration for Roth Touchline Temperature Logger
+
+# Note: The integration is configured via the UI (Settings > Devices & Services)
+# This file shows additional configuration options you can add to configuration.yaml
+
+# Enable debug logging for the integration
+logger:
+  default: info
+  logs:
+    custom_components.roth_touchline: debug
+
+# Recorder configuration to store temperature data
+recorder:
+  purge_keep_days: 90  # Keep 90 days of temperature history
+  include:
+    domains:
+      - sensor
+      - climate
+    entity_globs:
+      - sensor.roth_touchline_*
+      - climate.roth_touchline_*
+
+# History configuration
+history:
+  include:
+    entity_globs:
+      - sensor.roth_touchline_*_temperature
+      - climate.roth_touchline_*
+
+# Template sensors for house-wide statistics
+template:
+  - sensor:
+      # Average temperature across all rooms
+      - name: "House Average Temperature"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: >
+          {% set temps = states.sensor 
+            | selectattr('entity_id', 'match', 'sensor.roth_touchline_.*_current_temperature')
+            | selectattr('state', 'is_number')
+            | map(attribute='state') | map('float') | list %}
+          {% if temps | length > 0 %}
+            {{ (temps | sum / temps | length) | round(1) }}
+          {% else %}
+            unavailable
+          {% endif %}
+
+      # Temperature spread (difference between highest and lowest)
+      - name: "House Temperature Spread"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state: >
+          {% set temps = states.sensor 
+            | selectattr('entity_id', 'match', 'sensor.roth_touchline_.*_current_temperature')
+            | selectattr('state', 'is_number')
+            | map(attribute='state') | map('float') | list %}
+          {% if temps | length > 1 %}
+            {{ (temps | max - temps | min) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+# Binary sensor to check if any room is too cold
+binary_sensor:
+  - platform: template
+    sensors:
+      any_room_cold:
+        friendly_name: "Any Room Cold"
+        device_class: cold
+        value_template: >
+          {% set cold_rooms = states.sensor 
+            | selectattr('entity_id', 'match', 'sensor.roth_touchline_.*_current_temperature')
+            | selectattr('state', 'is_number')
+            | selectattr('state', 'float', '<', 18)
+            | list %}
+          {{ cold_rooms | length > 0 }}
+
+# Automation examples
+automation:
+  # Alert when any room gets too cold
+  - alias: "Room Temperature Alert"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.any_room_cold
+        to: 'on'
+        for:
+          minutes: 15
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "Low Temperature Alert"
+          message: >
+            One or more rooms have dropped below 18°C. 
+            Please check your heating system.
+
+  # Log temperature data every hour
+  - alias: "Hourly Temperature Log"
+    trigger:
+      - platform: time_pattern
+        minutes: 0
+    action:
+      - service: logbook.log
+        data:
+          name: "Temperature Logger"
+          message: >
+            House average: {{ states('sensor.house_average_temperature') }}°C, 
+            Spread: {{ states('sensor.house_temperature_spread') }}°C
+
+# Dashboard configuration example
+# Add this to your Lovelace dashboard YAML
+lovelace_dashboard_example:
+  title: "Temperature Monitoring"
+  cards:
+    # Current temperatures card
+    - type: entities
+      title: "Room Temperatures"
+      entities:
+        - sensor.roth_touchline_g0_current_temperature
+        - sensor.roth_touchline_g1_current_temperature
+        - sensor.roth_touchline_g2_current_temperature
+        - sensor.roth_touchline_g3_current_temperature
+        - sensor.house_average_temperature
+        - sensor.house_temperature_spread
+
+    # Temperature history graph
+    - type: history-graph
+      title: "Temperature History (24h)"
+      entities:
+        - sensor.roth_touchline_g0_current_temperature
+        - sensor.roth_touchline_g1_current_temperature
+        - sensor.roth_touchline_g2_current_temperature
+        - sensor.roth_touchline_g3_current_temperature
+      hours_to_show: 24
+      refresh_interval: 300
+
+    # Gauge card for average temperature
+    - type: gauge
+      entity: sensor.house_average_temperature
+      name: "House Average"
+      min: 15
+      max: 25
+      severity:
+        green: 20
+        yellow: 18
+        red: 16
+
+    # Climate controls (if supported by your Roth Touchline)
+    - type: thermostat
+      entity: climate.roth_touchline_g0
+
+# Script to export temperature data
+script:
+  export_weekly_temperatures:
+    alias: "Export Weekly Temperature Data"
+    sequence:
+      - service: roth_touchline.export_temperature_data
+        data:
+          days: 7
+          file_path: "/config/exports/weekly_temp_{{ now().strftime('%Y%m%d') }}.csv"
+      - service: persistent_notification.create
+        data:
+          title: "Temperature Export Complete"
+          message: "Weekly temperature data has been exported."
+
+# Input helpers for manual configuration
+input_number:
+  temperature_alert_threshold:
+    name: "Temperature Alert Threshold"
+    min: 10
+    max: 25
+    step: 0.5
+    unit_of_measurement: "°C"
+    initial: 18
+
+input_boolean:
+  temperature_alerts_enabled:
+    name: "Enable Temperature Alerts"
+    initial: true
