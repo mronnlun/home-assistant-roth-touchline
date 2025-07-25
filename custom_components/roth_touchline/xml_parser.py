@@ -89,7 +89,10 @@ class RothTouchlineXMLParser:
             
             # Add timestamp
             from datetime import datetime
-            zone_data["timestamp"] = datetime.now().isoformat()
+            zone_data["timestamp"] = datetime.now()
+            
+            # Also add last_seen timestamp for sensor
+            zone_data["last_seen"] = datetime.now()
             
         except Exception as err:
             _LOGGER.error("Error extracting zone data for %s: %s", zone_id, err)

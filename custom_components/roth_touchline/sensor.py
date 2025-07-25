@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -34,7 +35,8 @@ async def async_setup_entry(
     entities = []
     for zone_id, zone_data in coordinator.data.items():
         for sensor_type, sensor_config in SENSOR_TYPES.items():
-            if sensor_type in zone_data:
+            # Always create last_seen sensor, and create others only if data exists
+            if sensor_type == "last_seen" or sensor_type in zone_data:
                 entities.append(
                     RothTouchlineSensor(
                         coordinator, zone_id, zone_data, sensor_type, sensor_config
@@ -91,10 +93,24 @@ class RothTouchlineSensor(CoordinatorEntity[RothTouchlineDataUpdateCoordinator],
         }
 
     @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> float | int | str | datetime | None:
         """Return the state of the sensor."""
         zone_data = self.coordinator.data.get(self._zone_id, {})
-        return zone_data.get(self._sensor_type)
+        value = zone_data.get(self._sensor_type)
+        
+        # For timestamp sensors, ensure we return a datetime object
+        if self._sensor_type == "last_seen":
+            if isinstance(value, datetime):
+                return value
+            elif isinstance(value, str):
+                try:
+                    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+                except (ValueError, AttributeError):
+                    return None
+            else:
+                return None
+        
+        return value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
