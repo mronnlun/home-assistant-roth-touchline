@@ -22,7 +22,7 @@ jobs:
         # Get the list of changed Python files
         if [ "${{ github.event_name }}" == "pull_request" ]; then
           # For PRs, fetch the base branch to ensure we can compare
-          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git fetch origin ${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}
           CHANGED_FILES=$(git diff --name-only --diff-filter=ACM origin/${{ github.event.pull_request.base.ref }}..HEAD | grep '\.py$' || true)
         else
           # For push events, compare with the previous commit
