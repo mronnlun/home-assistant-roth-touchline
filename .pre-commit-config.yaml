@@ -11,10 +11,10 @@ repos:
       - id: check-docstring-first
 
   - repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 24.4.2
     hooks:
       - id: black
-        language_version: python3.11
+        language_version: python3.13
 
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
