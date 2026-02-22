@@ -35,3 +35,102 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-v --tb=short"
 asyncio_mode = "auto"
+
+[tool.pylint.main]
+# Use multiple processes to speed up Pylint
+jobs = 0
+# List of plugins (as comma separated values of python module names) to load
+load-plugins = []
+# Pickle collected data for later comparisons
+persistent = true
+
+[tool.pylint.messages_control]
+# Disable the message, report, category or checker with the given id(s)
+disable = [
+    "import-error",           # Home Assistant imports won't be available in CI
+    "fixme",                  # Allow TODO/FIXME comments
+    "too-few-public-methods", # Home Assistant entities often have few public methods
+    "broad-except",           # Catching broad exceptions is common in Home Assistant
+    "duplicate-code",         # Similar patterns across entity types are normal
+]
+
+[tool.pylint.reports]
+# Set the output format
+output-format = "text"
+# Tells whether to display a full report or only the messages
+reports = false
+# Activate the evaluation score
+score = true
+
+[tool.pylint.format]
+# Maximum number of characters on a single line (aligned with Black)
+max-line-length = 88
+# String used as indentation unit (4 spaces)
+indent-string = "    "
+# Number of spaces of indent required inside a hanging or continued line
+indent-after-paren = 4
+
+[tool.pylint.basic]
+# Good variable names which should always be accepted
+good-names = ["i", "j", "k", "ex", "Run", "_", "id", "ip"]
+# Naming style matching correct argument names
+argument-naming-style = "snake_case"
+# Naming style matching correct attribute names
+attr-naming-style = "snake_case"
+# Naming style matching correct class names
+class-naming-style = "PascalCase"
+# Naming style matching correct constant names
+const-naming-style = "UPPER_CASE"
+# Naming style matching correct function names
+function-naming-style = "snake_case"
+# Naming style matching correct method names
+method-naming-style = "snake_case"
+# Naming style matching correct module names
+module-naming-style = "snake_case"
+# Naming style matching correct variable names
+variable-naming-style = "snake_case"
+
+[tool.pylint.design]
+# Maximum number of arguments for function / method
+max-args = 7
+# Maximum number of attributes for a class
+max-attributes = 10
+# Maximum number of boolean expressions in an if statement
+max-bool-expr = 5
+# Maximum number of branch for function / method body
+max-branches = 12
+# Maximum number of locals for function / method body
+max-locals = 15
+# Maximum number of parents for a class
+max-parents = 7
+# Maximum number of public methods for a class
+max-public-methods = 20
+# Maximum number of return / yield for function / method body
+max-returns = 6
+# Maximum number of statements in function / method body
+max-statements = 50
+# Minimum number of public methods for a class
+min-public-methods = 0
+
+[tool.pylint.typecheck]
+# List of members which are set dynamically and missed by pylint inference
+# system, and so shouldn't trigger E1101 when accessed
+generated-members = []
+# Tells whether missing members accessed in mixin class should be ignored
+ignore-mixin-members = true
+# Tells whether to warn about missing members when the owner of the attribute
+# is inferred to be None
+ignore-none = true
+# This flag controls whether pylint should warn about no-member and similar
+# checks whenever an opaque object is returned when inferring
+ignore-on-opaque-inference = true
+
+[tool.pylint.similarities]
+# Ignore comments when computing similarities
+ignore-comments = true
+# Ignore docstrings when computing similarities
+ignore-docstrings = true
+# Ignore imports when computing similarities
+ignore-imports = true
+# Minimum lines number of a similarity
+min-similarity-lines = 4
