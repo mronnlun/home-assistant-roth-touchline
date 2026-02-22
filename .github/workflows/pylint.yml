@@ -26,8 +26,8 @@ jobs:
           CHANGED_FILES=$(git diff --name-only --diff-filter=ACM origin/${{ github.event.pull_request.base.ref }}..HEAD | grep '\.py$' || true)
         else
           # For push events, compare with the previous commit
-          # Handle case where there is no previous commit (initial commit)
-          if git rev-parse --verify ${{ github.event.before }} >/dev/null 2>&1; then
+          # Handle case where there is no previous commit (initial commit or new branch)
+          if [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ] && git rev-parse --verify ${{ github.event.before }} >/dev/null 2>&1; then
             CHANGED_FILES=$(git diff --name-only --diff-filter=ACM ${{ github.event.before }} ${{ github.sha }} | grep '\.py$' || true)
           else
             # For initial commit or when before SHA is not available, check all Python files in the commit
