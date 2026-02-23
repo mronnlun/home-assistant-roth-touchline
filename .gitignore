@@ -191,6 +191,9 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# Pylint cache
+.pylint.d/
+
 # PyPI configuration file
 .pypirc
 
