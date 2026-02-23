@@ -47,7 +47,7 @@ persistent = true
 [tool.pylint.messages_control]
 # Disable the message, report, category or checker with the given id(s)
 disable = [
-    "import-error",           # Home Assistant imports won't be available in CI
+    "import-error",           # Home Assistant imports are provided by the HA runtime and may be missing in typical lint environments
     "fixme",                  # Allow TODO/FIXME comments
     "too-few-public-methods", # Home Assistant entities often have few public methods
     "broad-except",           # Catching broad exceptions is common in Home Assistant
