@@ -67,18 +67,10 @@ jobs:
 
       - name: Build HACS release archive
         if: steps.release.outputs.release == 'true'
-        working-directory: custom_components/roth_touchline
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          from zipfile import ZIP_DEFLATED, ZipFile
-
-          root = Path(".")
-          with ZipFile("../../../roth_touchline.zip", "w", ZIP_DEFLATED) as archive:
-              for path in sorted(root.rglob("*")):
-                  if path.is_file() and "__pycache__" not in path.parts:
-                      archive.write(path, path.relative_to(root))
-          PY
+        run: >-
+          python scripts/build_release_archive.py
+          --source custom_components/roth_touchline
+          --output roth_touchline.zip
 
       - name: Publish GitHub release
         if: steps.release.outputs.release == 'true'
