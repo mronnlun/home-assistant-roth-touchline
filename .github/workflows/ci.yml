@@ -32,7 +32,9 @@ jobs:
 
       - name: Validate JSON metadata
         run: |
+          python -m json.tool .release-please-manifest.json > /dev/null
           python -m json.tool hacs.json > /dev/null
+          python -m json.tool release-please-config.json > /dev/null
           python -m json.tool custom_components/roth_touchline/manifest.json > /dev/null
           python -m json.tool custom_components/roth_touchline/strings.json > /dev/null
 
@@ -41,7 +43,6 @@ jobs:
         with:
           category: integration
           comment: false
-          ignore: brands
 
       - name: Check formatting
         run: python -m black --check custom_components tests tester.py

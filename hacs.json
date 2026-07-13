@@ -1,5 +1,7 @@
 {
   "name": "Roth Touchline",
   "hacs": "1.6.0",
-  "homeassistant": "2026.7.2"
+  "homeassistant": "2026.7.2",
+  "zip_release": true,
+  "filename": "roth_touchline.zip"
 }

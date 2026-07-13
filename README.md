@@ -154,6 +154,20 @@ automation:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+### Versioning and releases
+
+This project follows [Semantic Versioning](https://semver.org/) and uses
+[Conventional Commits](https://www.conventionalcommits.org/) for pull request
+titles:
+
+- `fix:` and `perf:` publish a patch release.
+- `feat:` publishes a minor release.
+- A `!` after the type or a `BREAKING CHANGE:` footer publishes a major release.
+
+Release Please maintains a release pull request containing the next version and
+changelog. Merging that pull request creates the GitHub release and uploads the
+`roth_touchline.zip` archive used by HACS.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
