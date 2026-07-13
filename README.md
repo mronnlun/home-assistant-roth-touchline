@@ -1,14 +1,12 @@
 # Home Assistant Roth Touchline Temperature Logger
 
-A custom integration for Home Assistant to monitor and log room temperatures from Roth Touchline classic series heating systems.
+A read-only custom integration for Home Assistant that monitors room temperatures
+and configured setpoints from Roth Touchline classic series heating systems.
 
 ## Features
 
-- **Comprehensive Temperature Monitoring**: Track current, target, daily average, minimum, and maximum temperatures for each room
-- **Climate Control**: Full thermostat functionality with temperature setting and HVAC mode control
-- **Historical Data**: Access temperature history and daily statistics
-- **Data Export**: Export temperature data to CSV files for analysis
-- **Additional Sensors**: Connectivity status and system monitoring
+- **Temperature Monitoring**: Track current and target temperatures for each room
+- **Read-only Operation**: The integration does not change controller settings
 - **Real-time Updates**: Automatic polling and logging of temperature data
 - **Easy Configuration**: Simple setup through Home Assistant's UI
 
@@ -58,63 +56,12 @@ The integration will automatically detect which zones are available on your syst
 
 ## Entities
 
-### Climate
-- `climate.roth_touchline_[zone_name]` - Main thermostat control
-
 ### Sensors
 - `sensor.roth_touchline_[zone_name]_current_temperature` - Current room temperature (from RaumTemp)
 - `sensor.roth_touchline_[zone_name]_target_temperature` - Target temperature setting (from SollTemp)
 - `sensor.roth_touchline_[zone_name]_last_seen` - Last communication timestamp
 
-**Note**: Additional sensors like daily statistics may not be available via the XML API and depend on your specific Roth Touchline model and firmware.
-
-### Climate Entities
-- `climate.roth_touchline_[zone_name]` - Climate control (primarily read-only monitoring)
-
-**Note**: Temperature and HVAC mode setting capabilities depend on your Roth Touchline system's XML API support.
-
-### Binary Sensors
-- `binary_sensor.roth_touchline_[zone_name]_heating` - Heating status
-- `binary_sensor.roth_touchline_[zone_name]_cooling` - Cooling status
-- `binary_sensor.roth_touchline_[zone_name]_online` - Connectivity status
-
-## Services
-
-### `roth_touchline.set_temperature`
-Set the target temperature for a specific zone.
-
-**Note**: This service may not work depending on your Roth Touchline system's XML API capabilities.
-
-**Parameters:**
-- `zone_id` (required): The zone identifier (e.g., "G0", "G1")
-- `temperature` (required): Target temperature in Celsius (5-35°C)
-
-### `roth_touchline.set_hvac_mode`
-Set the HVAC mode for a specific zone.
-
-**Note**: This service may not work depending on your Roth Touchline system's XML API capabilities.
-
-**Parameters:**
-- `zone_id` (required): The zone identifier (e.g., "G0", "G1")
-- `hvac_mode` (required): HVAC mode (off, heat, cool, auto)
-
-### `roth_touchline.get_temperature_history`
-Get temperature history for a specific zone.
-
-**Note**: This service may not be available as the XML API typically provides only current values.
-
-**Parameters:**
-- `zone_id` (required): The zone identifier
-- `hours` (optional): Number of hours of history to retrieve (default: 24, max: 168)
-
-### `roth_touchline.export_temperature_data`
-Export temperature data for all zones to a CSV file.
-
-**Note**: This service may have limited functionality due to XML API constraints.
-
-**Parameters:**
-- `days` (optional): Number of days of data to export (default: 7, max: 30)
-- `file_path` (optional): Custom file path for the export (default: auto-generated)
+Home Assistant's recorder can be used to retain and graph these sensor values.
 
 ## API Communication
 
@@ -175,38 +122,7 @@ For each zone (G0-G6), the integration requests:
 Additional system information:
 - **R0.SystemStatus**: Overall system status
 
-## Example Automations
-
-### Morning Heating
-```yaml
-automation:
-  - alias: "Morning Heating"
-    trigger:
-      platform: time
-      at: "06:00:00"
-    action:
-      - service: roth_touchline.set_temperature
-        data:
-          zone_id: "living_room"
-          temperature: 21
-      - service: roth_touchline.set_hvac_mode
-        data:
-          zone_id: "living_room"
-          hvac_mode: "heat"
-```
-
-### Daily Temperature Data Export
-```yaml
-automation:
-  - alias: "Daily Temperature Export"
-    trigger:
-      platform: time
-      at: "23:55:00"
-    action:
-      - service: roth_touchline.export_temperature_data
-        data:
-          days: 1
-```
+## Example Automation
 
 ### Temperature Alert
 ```yaml
@@ -220,24 +136,6 @@ automation:
       - service: notify.mobile_app
         data:
           message: "Bedroom temperature is too low: {{ states('sensor.roth_touchline_bedroom_current_temperature') }}°C"
-```
-
-### Weekly Temperature History Report
-```yaml
-automation:
-  - alias: "Weekly Temperature Report"
-    trigger:
-      platform: time
-      at: "08:00:00"
-    condition:
-      condition: time
-      weekday: 
-        - sun
-    action:
-      - service: roth_touchline.get_temperature_history
-        data:
-          zone_id: "living_room"
-          hours: 168  # 7 days
 ```
 
 ## Troubleshooting

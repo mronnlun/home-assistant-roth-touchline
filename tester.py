@@ -13,8 +13,8 @@ import asyncio
 import sys
 import time
 from typing import Optional
+
 import aiohttp
-import async_timeout
 
 # Import our XML parser from the integration
 from custom_components.roth_touchline.xml_parser import RothTouchlineXMLParser
@@ -46,12 +46,14 @@ class RothTouchlineTester:
     async def test_basic_connection(self) -> bool:
         """Test basic HTTP connectivity to the device."""
         print(f"🔗 Testing basic connection to {self.base_url}...")
-        
+
         try:
             async with aiohttp.ClientSession() as session:
-                async with async_timeout.timeout(self.timeout):
+                async with asyncio.timeout(self.timeout):
                     async with session.get(self.base_url) as response:
-                        print(f"   ✅ Basic connection successful (Status: {response.status})")
+                        print(
+                            f"   ✅ Connected successfully (status {response.status})"
+                        )
                         return True
         except asyncio.TimeoutError:
             print(f"   ❌ Connection timeout after {self.timeout} seconds")
@@ -67,52 +69,51 @@ class RothTouchlineTester:
         """Test the XML API with temperature requests."""
         if zones_to_test is None:
             zones_to_test = [f"G{i}" for i in range(self.max_zones)]
-        
+
         # Create XML request using integration's parser
         request_items = []
         for zone in zones_to_test:
             zone_num = zone.replace("G", "")
-            request_items.extend([
-                f"G{zone_num}.RaumTemp",
-                f"G{zone_num}.SollTemp",
-                f"G{zone_num}.name"
-            ])
-        
+            request_items.extend(
+                [f"G{zone_num}.RaumTemp", f"G{zone_num}.SollTemp", f"G{zone_num}.name"]
+            )
+
         # Add system status
         request_items.append("R0.SystemStatus")
-        
+
         xml_body = RothTouchlineXMLParser.create_request_xml(request_items)
-        
+
         print(f"📡 Testing XML API at {self.base_url}{self.endpoint}")
-        print(f"📤 Sending XML request:")
+        print("📤 Sending XML request:")
         print(f"   {xml_body}")
         print()
-        
+
         try:
             async with aiohttp.ClientSession() as session:
-                async with async_timeout.timeout(self.timeout):
+                async with asyncio.timeout(self.timeout):
                     async with session.post(
                         f"{self.base_url}{self.endpoint}",
                         data=xml_body,
-                        headers=self.get_headers()
+                        headers=self.get_headers(),
                     ) as response:
-                        
+
                         print(f"📊 Response Status: {response.status}")
-                        print(f"📋 Response Headers:")
+                        print("📋 Response Headers:")
                         for key, value in response.headers.items():
                             print(f"   {key}: {value}")
                         print()
-                        
+
                         if response.status == 200:
                             response_text = await response.text()
-                            print(f"✅ Response received ({len(response_text)} characters)")
+                            print(
+                                f"✅ Response received ({len(response_text)} characters)"
+                            )
                             return response_text
-                        else:
-                            error_text = await response.text()
-                            print(f"❌ HTTP Error {response.status}")
-                            print(f"Error response: {error_text}")
-                            return None
-                            
+                        error_text = await response.text()
+                        print(f"❌ HTTP Error {response.status}")
+                        print(f"Error response: {error_text}")
+                        return None
+
         except asyncio.TimeoutError:
             print(f"❌ Request timeout after {self.timeout} seconds")
             return None
@@ -131,42 +132,47 @@ class RothTouchlineTester:
         print(response_text)
         print("=" * 60)
         print()
-        
+
         # Try to parse using our integration's parser
         print("📊 Parsing with integration's XML parser...")
         values = RothTouchlineXMLParser.parse_values_response(response_text)
-        
+
         if values:
             print(f"✅ Successfully parsed {len(values)} values:")
             for key, value in values.items():
                 # Show if this is a temperature value that will be processed
-                if key.endswith('.RaumTemp') or key.endswith('.SollTemp'):
+                if key.endswith(".RaumTemp") or key.endswith(".SollTemp"):
                     try:
                         processed_temp = float(value) / 100.0
-                        print(f"   {key}: {value} (raw) → {processed_temp:.1f}°C (processed)")
-                    except (ValueError, TypeError):
+                        print(f"   {key}: {value} → {processed_temp:.1f}°C")
+                    except ValueError, TypeError:
                         print(f"   {key}: {value}")
                 else:
                     print(f"   {key}: {value}")
         else:
-            print("❌ No values parsed - response format may be different than expected")
-        
+            print(
+                "❌ No values parsed - response format may be different than expected"
+            )
+
         print()
-        
+
         # Try to extract zone information
         print("🏠 Extracting zone information...")
         zones = RothTouchlineXMLParser.get_available_zones(values, self.max_zones)
-        
+
         if zones:
             print(f"✅ Found {len(zones)} zones:")
             for zone in zones:
-                zone_data = RothTouchlineXMLParser.extract_zone_data(values, zone['id'])
+                zone_data = RothTouchlineXMLParser.extract_zone_data(values, zone["id"])
                 print(f"   Zone {zone['id']} ({zone['name']}):")
-                print(f"     Current temp: {zone_data.get('current_temperature', 'N/A')}°C")
-                print(f"     Target temp:  {zone_data.get('target_temperature', 'N/A')}°C")
+                current = zone_data.get("current_temperature", "N/A")
+                print(f"     Current temp: {current}°C")
+                print(
+                    f"     Target temp:  {zone_data.get('target_temperature', 'N/A')}°C"
+                )
         else:
             print("❌ No zones detected")
-        
+
         return values
 
     async def run_complete_test(self) -> bool:
@@ -177,25 +183,25 @@ class RothTouchlineTester:
         print(f"Max zones: {self.max_zones}")
         print(f"Timestamp: {time.strftime('%Y-%m-%d %H:%M:%S')}")
         print()
-        
+
         # Test basic connection
         if not await self.test_basic_connection():
             print("❌ Cannot proceed - basic connection failed")
             return False
-        
+
         print()
-        
+
         # Test XML API
         response = await self.test_xml_api()
         if response is None:
             print("❌ Cannot proceed - XML API request failed")
             return False
-        
+
         print()
-        
+
         # Analyze response
         self.analyze_response(response)
-        
+
         print()
         print("✅ Test completed successfully!")
         return True
@@ -209,18 +215,18 @@ async def main():
         print("Example: python tester.py 192.168.0.104 80")
         print("Example: python tester.py 192.168.0.104 80 10")
         sys.exit(1)
-    
+
     host = sys.argv[1]
     port = 80
     max_zones = 7
-    
+
     if len(sys.argv) >= 3:
         try:
             port = int(sys.argv[2])
         except ValueError:
             print(f"Error: Invalid port number '{sys.argv[2]}'")
             sys.exit(1)
-    
+
     if len(sys.argv) >= 4:
         try:
             max_zones = int(sys.argv[3])
@@ -230,19 +236,10 @@ async def main():
         except ValueError:
             print(f"Error: Invalid max_zones number '{sys.argv[3]}'")
             sys.exit(1)
-    
-    # Check if required dependencies are available
-    try:
-        import aiohttp
-        import async_timeout
-    except ImportError as e:
-        print(f"❌ Missing required dependency: {e}")
-        print("Please install with: pip install aiohttp async-timeout")
-        sys.exit(1)
-    
+
     # Create and run tester
     tester = RothTouchlineTester(host, port, max_zones)
-    
+
     try:
         success = await tester.run_complete_test()
         sys.exit(0 if success else 1)

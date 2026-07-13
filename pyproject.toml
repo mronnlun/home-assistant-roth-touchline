@@ -3,7 +3,7 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 
 [tool.black]
 line-length = 88
-target-version = ["py311"]
+target-version = ["py314"]
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -42,7 +42,7 @@ jobs = 0
 # List of plugins (as comma separated values of python module names) to load
 load-plugins = []
 # Pickle collected data for later comparisons
-persistent = true
+persistent = false
 
 [tool.pylint.messages_control]
 # Disable the message, report, category or checker with the given id(s)
@@ -52,6 +52,8 @@ disable = [
     "too-few-public-methods", # Home Assistant entities often have few public methods
     "broad-except",           # Catching broad exceptions is common in Home Assistant
     "duplicate-code",         # Similar patterns across entity types are normal
+    "abstract-method",        # Home Assistant flow base classes have runtime methods
+    "mixed-line-endings",     # Git normalizes line endings in CI
 ]
 
 [tool.pylint.reports]
