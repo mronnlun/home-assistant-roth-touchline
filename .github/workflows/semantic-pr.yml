@@ -1,0 +1,40 @@
+name: Semantic PR title
+
+on:
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+      - synchronize
+
+permissions: {}
+
+jobs:
+  title:
+    name: Validate title
+    runs-on: ubuntu-latest
+    env:
+      PR_TITLE: ${{ github.event.pull_request.title }}
+
+    steps:
+      - name: Require a Conventional Commit title
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          import sys
+
+          title = os.environ["PR_TITLE"]
+          pattern = re.compile(
+              r"^(build|chore|ci|docs|feat|fix|perf|refactor|revert|test)"
+              r"(\([a-z0-9._-]+\))?!?: .+"
+          )
+          if not pattern.fullmatch(title):
+              print(
+                  "PR title must follow Conventional Commits, for example "
+                  "'fix: handle controller timeout' or "
+                  "'feat!: change configuration format'."
+              )
+              sys.exit(1)
+          PY
