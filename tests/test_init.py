@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.roth_touchline import async_migrate_entry, async_setup_entry
+from custom_components.roth_touchline import async_migrate_entry
 from custom_components.roth_touchline.const import (
     CONF_MAX_ZONES,
     CONF_UPDATE_INTERVAL,
@@ -75,20 +74,24 @@ async def test_setup_creates_read_only_sensors(hass: HomeAssistant) -> None:
         "192.0.2.1:80_G0_last_seen",
     }
     assert all(
-        hass.states[entity.entity_id].state != "unavailable" for entity in entries
+        (state := hass.states.get(entity.entity_id)) is not None
+        and state.state != "unavailable"
+        for entity in entries
     )
 
 
 async def test_first_refresh_failure_retries_setup(hass: HomeAssistant) -> None:
     """A controller failure during initial refresh asks Home Assistant to retry."""
     entry = _config_entry("192.0.2.1")
+    entry.add_to_hass(hass)
 
     with patch("custom_components.roth_touchline.RothTouchlineHub") as hub_class:
         hub_class.return_value.get_zone_data = AsyncMock(
             side_effect=RothTouchlineCommunicationError("offline")
         )
-        with pytest.raises(ConfigEntryNotReady):
-            await async_setup_entry(hass, entry)
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_entities_become_unavailable_and_recover(hass: HomeAssistant) -> None:
@@ -101,12 +104,16 @@ async def test_entities_become_unavailable_and_recover(hass: HomeAssistant) -> N
 
     hub.get_zone_data.side_effect = RothTouchlineCommunicationError("offline")
     await coordinator.async_refresh()
-    assert hass.states[entity.entity_id].state == "unavailable"
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
 
     hub.get_zone_data.side_effect = None
     hub.get_zone_data.return_value = ZONE_DATA
     await coordinator.async_refresh()
-    assert hass.states[entity.entity_id].state != "unavailable"
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state != "unavailable"
 
 
 async def test_unload_removes_runtime_data(hass: HomeAssistant) -> None:

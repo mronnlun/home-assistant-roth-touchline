@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hub = RothTouchlineHub(async_get_clientsession(hass), host, port, max_zones)
 
-    coordinator = RothTouchlineDataUpdateCoordinator(hass, hub, update_interval)
+    coordinator = RothTouchlineDataUpdateCoordinator(hass, entry, hub, update_interval)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})

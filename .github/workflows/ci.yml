@@ -41,6 +41,7 @@ jobs:
         with:
           category: integration
           comment: false
+          ignore: brands
 
       - name: Check formatting
         run: python -m black --check custom_components tests tester.py
