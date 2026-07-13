@@ -32,9 +32,7 @@ jobs:
 
       - name: Validate JSON metadata
         run: |
-          python -m json.tool .release-please-manifest.json > /dev/null
           python -m json.tool hacs.json > /dev/null
-          python -m json.tool release-please-config.json > /dev/null
           python -m json.tool custom_components/roth_touchline/manifest.json > /dev/null
           python -m json.tool custom_components/roth_touchline/strings.json > /dev/null
 
@@ -45,19 +43,19 @@ jobs:
           comment: false
 
       - name: Check formatting
-        run: python -m black --check custom_components tests tester.py
+        run: python -m black --check custom_components scripts tests tester.py
 
       - name: Check import order
-        run: python -m isort --check-only custom_components tests tester.py
+        run: python -m isort --check-only custom_components scripts tests tester.py
 
       - name: Run Flake8
-        run: python -m flake8 custom_components tests tester.py
+        run: python -m flake8 custom_components scripts tests tester.py
 
       - name: Run mypy
         run: python -m mypy custom_components/roth_touchline
 
       - name: Run Pylint
-        run: python -m pylint --jobs=1 custom_components/roth_touchline tests tester.py
+        run: python -m pylint --jobs=1 custom_components/roth_touchline scripts tests tester.py
 
       - name: Run tests
         run: python -m pytest

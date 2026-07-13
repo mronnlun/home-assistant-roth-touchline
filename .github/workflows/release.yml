@@ -4,39 +4,69 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 permissions:
   contents: write
-  pull-requests: write
+  pull-requests: read
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
 
 jobs:
   release:
-    name: Create release
+    name: Publish merged change
     runs-on: ubuntu-latest
 
     steps:
-      - name: Create or update release pull request
-        id: release
-        uses: googleapis/release-please-action@v4
-        with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
-      - name: Check out released version
-        if: steps.release.outputs.release_created == 'true'
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.release.outputs.tag_name }}
+          fetch-depth: 0
+          ref: main
 
       - name: Set up Python
-        if: steps.release.outputs.release_created == 'true'
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.14"
+
+      - name: Bump integration version
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          change_file="$RUNNER_TEMP/pull-request.txt"
+          gh api \
+            -H "Accept: application/vnd.github+json" \
+            "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" \
+            --jq '.[0] // empty | .title + "\n\n" + (.body // "")' \
+            > "$change_file"
+          if [[ ! -s "$change_file" ]]; then
+            echo "No pull request is associated with this push; skipping release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python scripts/semantic_release.py \
+            --manifest custom_components/roth_touchline/manifest.json \
+            --change-file "$change_file" \
+            --github-output "$GITHUB_OUTPUT"
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and tag version
+        if: steps.release.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add custom_components/roth_touchline/manifest.json
+          git commit -m "chore(release): v${VERSION} [skip ci]"
+          git pull --rebase origin main
+          git tag -a "v${VERSION}" -m "v${VERSION}"
+          git push origin HEAD:main "v${VERSION}"
 
       - name: Build HACS release archive
-        if: steps.release.outputs.release_created == 'true'
+        if: steps.release.outputs.release == 'true'
         working-directory: custom_components/roth_touchline
         run: |
           python - <<'PY'
@@ -46,13 +76,17 @@ jobs:
           root = Path(".")
           with ZipFile("../../../roth_touchline.zip", "w", ZIP_DEFLATED) as archive:
               for path in sorted(root.rglob("*")):
-                  if path.is_file():
+                  if path.is_file() and "__pycache__" not in path.parts:
                       archive.write(path, path.relative_to(root))
           PY
 
-      - name: Upload HACS release archive
-        if: steps.release.outputs.release_created == 'true'
+      - name: Publish GitHub release
+        if: steps.release.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.release.outputs.tag_name }}
-        run: gh release upload "$RELEASE_TAG" roth_touchline.zip --clobber
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          gh release create "v${VERSION}" roth_touchline.zip \
+            --verify-tag \
+            --title "v${VERSION}" \
+            --generate-notes

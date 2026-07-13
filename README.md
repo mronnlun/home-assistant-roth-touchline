@@ -160,13 +160,14 @@ This project follows [Semantic Versioning](https://semver.org/) and uses
 [Conventional Commits](https://www.conventionalcommits.org/) for pull request
 titles:
 
-- `fix:` and `perf:` publish a patch release.
+- `fix:`, `perf:`, and all other non-feature changes publish a patch release.
 - `feat:` publishes a minor release.
 - A `!` after the type or a `BREAKING CHANGE:` footer publishes a major release.
 
-Release Please maintains a release pull request containing the next version and
-changelog. Merging that pull request creates the GitHub release and uploads the
-`roth_touchline.zip` archive used by HACS.
+Every pull request merged into `main` automatically updates the integration
+version, creates a version tag and GitHub release, generates release notes, and
+uploads the `roth_touchline.zip` archive used by HACS. The release workflow does
+not create or merge pull requests.
 
 ## License
 
